@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+gtts
+langdetect
+datetime
+google-cloud-texttospeech
+google-auth
+python-multipart
+protobuf==3.13.*
