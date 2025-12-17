@@ -9,7 +9,13 @@ from datetime import datetime
 from google.cloud import texttospeech
 from google.cloud import texttospeech
 from google.oauth2 import service_account
+
 app = FastAPI()
+
+AUDIO_DIR = "audio"
+os.makedirs(AUDIO_DIR, exist_ok=True)
+
+app.mount("/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
 
 # ===== LOAD GOOGLE CREDENTIALS FROM ENV =====
 credentials_info = json.loads(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON"))
