@@ -3,19 +3,21 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from gtts import gTTS
 from langdetect import detect
-import uuid, re, os, json
+import re, os, json
 import subprocess
 from datetime import datetime
-from google.cloud import texttospeech
 from google.cloud import texttospeech
 from google.oauth2 import service_account
 
 app = FastAPI()
 
+# Ghi chú:
+# Đây là phần khởi tạo và cấu hình ban đầu cho ứng dụng FastAPI,
+# bao gồm import các thư viện cần thiết và tạo instance cho app.
 AUDIO_DIR = "audio"
 os.makedirs(AUDIO_DIR, exist_ok=True)
-
-app.mount("/audio", StaticFiles(directory=AUDIO_DIR), name="audio")
+# Serve static files
+app.mount("/audio", StaticFiles(directory="audio"), name="audio")
 
 # ===== LOAD GOOGLE CREDENTIALS FROM ENV =====
 credentials_info = json.loads(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON"))
@@ -23,8 +25,6 @@ credentials = service_account.Credentials.from_service_account_info(credentials_
 
 tts_client = texttospeech.TextToSpeechClient(credentials=credentials)
 
-# Serve static files
-app.mount("/audio", StaticFiles(directory="audio"), name="audio")
 
 SUPPORTED_LANGS = [
     'af','ar','bn','bs','ca','cs','cy','da','de','el','en','eo','es','et','fi',
