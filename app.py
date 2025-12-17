@@ -3,10 +3,12 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from gtts import gTTS
 from langdetect import detect
-import uuid, re, os
+import uuid, re, os, json
 import subprocess
 from datetime import datetime
 from google.cloud import texttospeech
+from google.cloud import texttospeech
+from google.oauth2 import service_account
 app = FastAPI()
 
 # ===== LOAD GOOGLE CREDENTIALS FROM ENV =====
