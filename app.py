@@ -9,6 +9,14 @@ from datetime import datetime
 from google.cloud import texttospeech
 from google.oauth2 import service_account
 
+import time
+import json
+from logging_config import setup_logger
+from langdetect.lang_detect_exception import LangDetectException
+
+logger = setup_logger()
+
+
 app = FastAPI()
 
 # Ghi chú:
@@ -125,7 +133,11 @@ def convert_text_to_speech(text: str, lang: str | None, speed: float | None, bas
 
 def cgtts_convert_text_to_speech(text: str, lang: str | None, speed: float | None, gender: str | None):
     if not lang:
-        lang = detect(text)
+        try:
+            lang = detect(text)
+        except LangDetectException:
+            logger.warning(f"LANG_DETECT_FAIL | text='{text[:50]}'")
+            lang = "en"
 
     if lang == "vi":
         language_code = "vi-VN"
@@ -158,11 +170,25 @@ def cgtts_convert_text_to_speech(text: str, lang: str | None, speed: float | Non
         speaking_rate=speed,
     )
 
+
+    start = time.time()
+
+    logger.info(
+        f"TTS_START | lang={language_code} | voice={voice_name} | gender={gender}"
+    )
+
     response = tts_client.synthesize_speech(
         input=synthesis_input,
         voice=voice,
         audio_config=audio_config,
     )
+
+    elapsed = (time.time() - start) * 1000
+
+    logger.info(
+        f"TTS_DONE | voice={voice_name} | time={elapsed:.2f}ms | chars={len(text)}"
+    )
+
 
     with open(filepath, "wb") as out:
         out.write(response.audio_content)
@@ -205,3 +231,37 @@ async def cgtts_text_to_speech(req: TTSRequestCGTTS):
         results.append(result)
 
     return {"results": results}
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+
+    # đọc body (chỉ 1 lần!)
+    body = await request.body()
+    body_text = body.decode("utf-8") if body else ""
+
+    # giới hạn log body
+    if len(body_text) > 1000:
+        body_text = body_text[:1000] + "...(truncated)"
+
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+    except Exception as e:
+        process_time = (time.time() - start_time) * 1000
+        logger.error(
+            f"❌ ERROR | {request.method} {request.url.path} "
+            f"| {process_time:.2f}ms | body={body_text} | error={str(e)}"
+        )
+        raise
+
+    process_time = (time.time() - start_time) * 1000
+
+    logger.info(
+        f"✅ {request.method} {request.url.path} "
+        f"| {status_code} | {process_time:.2f}ms "
+        f"| ip={request.client.host if request.client else 'unknown'} "
+        f"| body={body_text}"
+    )
+
+    return response
