@@ -131,6 +131,155 @@ def convert_text_to_speech(text: str, lang: str | None, speed: float | None, bas
         "audio_url": f"{audio_url}"
     }
 
+
+
+LANGUAGE_MAP = {
+    # 🇻🇳 Vietnamese
+    "vi": {
+        "code": "vi-VN",
+        "female": "vi-VN-Standard-A",
+        "male": "vi-VN-Standard-B",
+    },
+
+    # 🇺🇸 English
+    "en": {
+        "code": "en-US",
+        "female": "en-US-Standard-C",
+        "male": "en-US-Standard-D",
+    },
+
+    # 🇫🇷 French
+    "fr": {
+        "code": "fr-FR",
+        "female": "fr-FR-Standard-A",
+        "male": "fr-FR-Standard-B",
+    },
+
+    # 🇩🇪 German
+    "de": {
+        "code": "de-DE",
+        "female": "de-DE-Standard-A",
+        "male": "de-DE-Standard-B",
+    },
+
+    # 🇯🇵 Japanese
+    "ja": {
+        "code": "ja-JP",
+        "female": "ja-JP-Standard-A",
+        "male": "ja-JP-Standard-C",
+    },
+
+    # 🇰🇷 Korean
+    "ko": {
+        "code": "ko-KR",
+        "female": "ko-KR-Standard-A",
+        "male": "ko-KR-Standard-C",
+    },
+
+    # 🇨🇳 Chinese (Simplified)
+    "zh-cn": {
+        "code": "cmn-CN",
+        "female": "cmn-CN-Standard-A",
+        "male": "cmn-CN-Standard-B",
+    },
+    "zh": {  # langdetect trả về zh
+        "code": "cmn-CN",
+        "female": "cmn-CN-Standard-A",
+        "male": "cmn-CN-Standard-B",
+    },
+
+    # 🇹🇼 Chinese (Traditional)
+    "zh-tw": {
+        "code": "cmn-TW",
+        "female": "cmn-TW-Standard-A",
+        "male": "cmn-TW-Standard-B",
+    },
+
+    # 🇪🇸 Spanish
+    "es": {
+        "code": "es-ES",
+        "female": "es-ES-Standard-A",
+        "male": "es-ES-Standard-B",
+    },
+
+    # 🇮🇹 Italian
+    "it": {
+        "code": "it-IT",
+        "female": "it-IT-Standard-A",
+        "male": "it-IT-Standard-B",
+    },
+
+    # 🇵🇹 Portuguese (Brazil)
+    "pt": {
+        "code": "pt-BR",
+        "female": "pt-BR-Standard-A",
+        "male": "pt-BR-Standard-B",
+    },
+
+    # 🇷🇺 Russian
+    "ru": {
+        "code": "ru-RU",
+        "female": "ru-RU-Standard-A",
+        "male": "ru-RU-Standard-B",
+    },
+
+    # 🇹🇭 Thai
+    "th": {
+        "code": "th-TH",
+        "female": "th-TH-Standard-A",
+        "male": "th-TH-Standard-B",
+    },
+
+    # 🇮🇩 Indonesian
+    "id": {
+        "code": "id-ID",
+        "female": "id-ID-Standard-A",
+        "male": "id-ID-Standard-B",
+    },
+
+    # 🇳🇱 Dutch
+    "nl": {
+        "code": "nl-NL",
+        "female": "nl-NL-Standard-A",
+        "male": "nl-NL-Standard-B",
+    },
+
+    # 🇵🇱 Polish
+    "pl": {
+        "code": "pl-PL",
+        "female": "pl-PL-Standard-A",
+        "male": "pl-PL-Standard-B",
+    },
+
+    # 🇹🇷 Turkish
+    "tr": {
+        "code": "tr-TR",
+        "female": "tr-TR-Standard-A",
+        "male": "tr-TR-Standard-B",
+    },
+
+    # 🇺🇦 Ukrainian
+    "uk": {
+        "code": "uk-UA",
+        "female": "uk-UA-Standard-A",
+        "male": "uk-UA-Standard-B",
+    },
+
+    # 🇸🇦 Arabic
+    "ar": {
+        "code": "ar-XA",
+        "female": "ar-XA-Standard-A",
+        "male": "ar-XA-Standard-B",
+    },
+
+    # 🇮🇳 Hindi
+    "hi": {
+        "code": "hi-IN",
+        "female": "hi-IN-Standard-A",
+        "male": "hi-IN-Standard-B",
+    },
+}
+
 def cgtts_convert_text_to_speech(text: str, lang: str | None, speed: float | None, gender: str | None):
     if not lang:
         try:
@@ -139,15 +288,14 @@ def cgtts_convert_text_to_speech(text: str, lang: str | None, speed: float | Non
             logger.warning(f"LANG_DETECT_FAIL | text='{text[:50]}'")
             lang = "en"
 
-    if lang == "vi":
-        language_code = "vi-VN"
-        voice_name = "vi-VN-Standard-A" if gender == "female" else "vi-VN-Standard-B"
-    else:
-        language_code = "en-US"
-        voice_name = "en-US-Standard-D"
+    gender = gender if gender in ("male", "female") else "female"
 
-    if not speed or speed <= 0:
-        speed = 1.0
+    cfg = LANGUAGE_MAP.get(lang, LANGUAGE_MAP["en"])
+
+    language_code = cfg["code"]
+    voice_name = cfg[gender]
+
+    speed = speed if speed and speed > 0 else 1.0
 
     filepath, audio_url, filename = generate_audio_path()
 
